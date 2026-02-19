@@ -1,96 +1,79 @@
 // /src/CollectionPage.tsx
 import { useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { Gem, Locale } from "./types";
+
+import type { Gem, Locale, ProgressState } from "./types";
+import { isLocale } from "./types";
 import { loadProgress, saveProgress } from "./storage";
-import GemCard from "./GemCard";
-import BadgeRow from "./BadgeRow";
-import ShareCard from "./ShareCard";
-import { computeEarnedBadges } from "./badges";
 
-export default function CollectionPage({ locale }: { locale: Locale }) {
-  const { t, i18n } = useTranslation();
+export default function CollectionPage() {
+  const { locale } = useParams();
+  const loc: Locale = isLocale(locale) ? locale : "en";
+  const { t } = useTranslation();
+
   const [gems, setGems] = useState<Gem[]>([]);
-  const [progress, setProgress] = useState(loadProgress());
-  const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState<ProgressState>(() => loadProgress());
 
   useEffect(() => {
-    void i18n.changeLanguage(locale);
-  }, [locale, i18n]);
-
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const res = await fetch("/data/gems.json");
-      const data = (await res.json()) as Gem[];
-      setGems(data);
-      setLoading(false);
-    })();
+    fetch("/data/gems.json")
+      .then((r) => r.json())
+      .then((d) => setGems(Array.isArray(d) ? (d as Gem[]) : []))
+      .catch(() => setGems([]));
   }, []);
 
-  const unlocked = useMemo(
-    () => gems.filter((g) => progress.unlockedGemIds.includes(g.id)),
-    [gems, progress.unlockedGemIds]
-  );
+  useEffect(() => {
+    saveProgress(progress);
+  }, [progress]);
 
-  const earned = useMemo(
-    () => computeEarnedBadges({ unlockedGemIds: progress.unlockedGemIds, allGems: gems }),
-    [progress.unlockedGemIds, gems]
-  );
-
-  const onUnlock = (id: string) => {
-    if (progress.unlockedGemIds.includes(id)) return;
-    const next = {
-      ...progress,
-      unlockedGemIds: [...progress.unlockedGemIds, id],
-      totalPoints: progress.totalPoints + 5
-    };
-    next.earnedBadges = computeEarnedBadges({ unlockedGemIds: next.unlockedGemIds, allGems: gems });
-    setProgress(next);
-    saveProgress(next);
-  };
+  const unlockedSet = useMemo(() => new Set(progress.unlockedGemIds), [progress.unlockedGemIds]);
+  const unlockedGems = useMemo(() => gems.filter((g) => unlockedSet.has(g.id)), [gems, unlockedSet]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-extrabold">{t("collection.title")}</h1>
-          <p className="text-sm text-slate-400">{t("labels.unlockedGems")}</p>
+    <div className="px-4 py-10">
+      <div className="mx-auto max-w-6xl">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold text-white">{t("collection.title")}</h1>
+            <div className="mt-2 text-sm text-slate-300">
+              {t("collection.points")}: <span className="font-semibold text-white">{progress.totalPoints}</span>
+              {" • "}
+              {t("collection.unlocked")}: <span className="font-semibold text-white">{progress.unlockedGemIds.length}</span>
+            </div>
+          </div>
+          <Link
+            to={`/${loc}/map`}
+            className="rounded-xl bg-teal-500/20 px-4 py-2 text-white hover:bg-teal-500/30"
+          >
+            {t("collection.backToMap")}
+          </Link>
         </div>
-        <div className="text-sm text-slate-300">
-          <span className="text-slate-400">{t("labels.points")}:</span>{" "}
-          <span className="font-semibold text-brandTeal">{progress.totalPoints}</span>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {unlockedGems.map((g) => (
+            <div key={g.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <img
+                src={g.images?.[0] ?? "/gems/dubai-skyline.svg"}
+                className="h-40 w-full rounded-xl border border-white/10 object-cover"
+                alt={loc === "ar" ? g.name_ar : g.name_en}
+              />
+              <div className="mt-3 font-medium text-white">{loc === "ar" ? g.name_ar : g.name_en}</div>
+              <div className="mt-1 text-xs text-slate-400">
+                {loc === "ar" ? g.area_ar : g.area_en} • {g.emirate}
+              </div>
+              <Link to={`/${loc}/gem/${g.id}`} className="mt-3 inline-block text-sm text-teal-300 hover:text-teal-200">
+                {t("common.viewDetails")} →
+              </Link>
+            </div>
+          ))}
+
+          {unlockedGems.length === 0 && (
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-300">
+              {t("collection.empty")}
+            </div>
+          )}
         </div>
       </div>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-bold">{t("labels.badges")}</h2>
-        <BadgeRow earned={earned} />
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-bold">{t("labels.unlockedGems")}</h2>
-
-        {loading ? (
-          <div className="text-slate-400">{t("labels.loading")}</div>
-        ) : unlocked.length === 0 ? (
-          <div className="rounded-2xl border border-slate-800/70 bg-slate-950/40 p-6 text-slate-400">
-            {t("labels.nothingUnlocked")}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {unlocked.map((g) => (
-              <GemCard key={g.id} locale={locale} gem={g} progress={progress} onUnlock={onUnlock} compact />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="text-xl font-bold">{t("collection.shareTitle")}</h2>
-        <p className="text-sm text-slate-400">{t("collection.shareSubtitle")}</p>
-        <ShareCard unlockedCount={progress.unlockedGemIds.length} points={progress.totalPoints} />
-      </section>
     </div>
   );
 }
