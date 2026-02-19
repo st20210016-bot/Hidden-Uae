@@ -1,62 +1,74 @@
 // /src/MapPage.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
-import maplibregl, { Map as MLMap, Marker } from "maplibre-gl";
+import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import maplibregl, { Map } from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 
-import type { Gem, Locale } from "./types";
+import type { Gem, Locale, ProgressState } from "./types";
+import { EMIRATES, isLocale } from "./types";
 import { loadProgress, saveProgress } from "./storage";
-import FilterBar, { Filters } from "./FilterBar";
-import { matchesFilters } from "./gemSearch";
-import { computeEarnedBadges } from "./badges";
 
-export default function MapPage({ locale }: { locale: Locale }) {
-  const { t, i18n } = useTranslation();
+const STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 
-  const mapRef = useRef<MLMap | null>(null);
-  const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const markersRef = useRef<Marker[]>([]);
+export default function MapPage() {
+  const { locale } = useParams();
+  const loc: Locale = isLocale(locale) ? locale : "en";
+  const { t } = useTranslation();
+
+  const mapRef = useRef<Map | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const [gems, setGems] = useState<Gem[]>([]);
-  const [progress, setProgress] = useState(loadProgress());
-  const [selected, setSelected] = useState<Gem | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState<ProgressState>(() => loadProgress());
+  const [active, setActive] = useState<Gem | null>(null);
 
-  const [filters, setFilters] = useState<Filters>({
-    emirate: "all",
-    budget: "all",
-    photogenicOnly: false,
-    search: ""
-  });
+  // filters
+  const [emirate, setEmirate] = useState<string>("all");
+  const [budget, setBudget] = useState<string>("all");
+  const [photogenic, setPhotogenic] = useState<boolean>(false);
+  const [q, setQ] = useState("");
 
   useEffect(() => {
-    void i18n.changeLanguage(locale);
-  }, [locale, i18n]);
-
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const res = await fetch("/data/gems.json");
-      const data = (await res.json()) as Gem[];
-      setGems(data);
-      setLoading(false);
-    })();
+    fetch("/data/gems.json")
+      .then((r) => r.json())
+      .then((d) => setGems(Array.isArray(d) ? (d as Gem[]) : []))
+      .catch(() => setGems([]));
   }, []);
+
+  useEffect(() => {
+    saveProgress(progress);
+  }, [progress]);
+
+  const filtered = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    return gems.filter((g) => {
+      if (emirate !== "all" && g.emirate !== emirate) return false;
+      if (budget !== "all" && g.budget !== budget) return false;
+      if (photogenic && !g.photogenic) return false;
+      if (query) {
+        const hay = `${g.name_en} ${g.name_ar} ${g.area_en} ${g.area_ar} ${g.tags.join(" ")}`.toLowerCase();
+        if (!hay.includes(query)) return false;
+      }
+      return true;
+    });
+  }, [gems, emirate, budget, photogenic, q]);
 
   // init map once
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (!containerRef.current) return;
+    if (mapRef.current) return;
 
     const map = new maplibregl.Map({
-      container: mapContainerRef.current,
-      style: "https://tiles.openfreemap.org/styles/liberty",
-      center: [55.2708, 25.2048], // Dubai-ish
-      zoom: 8.2,
+      container: containerRef.current,
+      style: STYLE_URL,
+      center: [55.27, 25.2], // Dubai-ish
+      zoom: 8,
       minZoom: 6,
-      maxZoom: 14
+      maxZoom: 15
     });
 
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
-
     mapRef.current = map;
 
     return () => {
@@ -65,154 +77,177 @@ export default function MapPage({ locale }: { locale: Locale }) {
     };
   }, []);
 
-  const filteredGems = useMemo(
-    () => gems.filter((g) => matchesFilters(g, filters, locale)),
-    [gems, filters, locale]
-  );
-
-  // refresh markers whenever filtered list changes
+  // update markers whenever filtered list changes
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    // cleanup old markers
-    markersRef.current.forEach((m) => m.remove());
-    markersRef.current = [];
+    // clear old markers
+    // we store markers on window for simplicity
+    const w = window as any;
+    if (w.__markers) {
+      for (const m of w.__markers) m.remove();
+    }
+    w.__markers = [];
 
-    for (const gem of filteredGems) {
+    for (const g of filtered) {
       const el = document.createElement("button");
-      el.type = "button";
       el.className =
-        "h-3.5 w-3.5 rounded-full shadow-glow border border-slate-200/20 " +
-        (progress.unlockedGemIds.includes(gem.id) ? "bg-brandTeal" : "bg-brandOrange");
-
-      el.title = locale === "ar" ? gem.name_ar : gem.name_en;
-
-      el.addEventListener("click", () => setSelected(gem));
+        "h-9 w-9 rounded-full border border-white/20 bg-black/60 text-white shadow-[0_0_18px_rgba(45,212,191,0.20)] hover:bg-black/80";
+      el.textContent = "✦";
+      el.onclick = () => setActive(g);
 
       const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([gem.coords.lng, gem.coords.lat])
+        .setLngLat([g.coords.lng, g.coords.lat])
         .addTo(map);
 
-      markersRef.current.push(marker);
+      w.__markers.push(marker);
     }
-  }, [filteredGems, progress.unlockedGemIds, locale]);
+  }, [filtered]);
 
-  const unlock = (id: string) => {
-    if (progress.unlockedGemIds.includes(id)) return;
-
+  function unlock(gem: Gem) {
+    if (progress.unlockedGemIds.includes(gem.id)) return;
     const next = {
       ...progress,
-      unlockedGemIds: [...progress.unlockedGemIds, id],
-      totalPoints: progress.totalPoints + 5
+      unlockedGemIds: [gem.id, ...progress.unlockedGemIds],
+      totalPoints: progress.totalPoints + 5,
+      points: progress.totalPoints + 5
     };
-    next.earnedBadges = computeEarnedBadges({ unlockedGemIds: next.unlockedGemIds, allGems: gems });
     setProgress(next);
-    saveProgress(next);
-  };
+  }
 
-  const selectedUnlocked = selected ? progress.unlockedGemIds.includes(selected.id) : false;
-  const selectedName = selected ? (locale === "ar" ? selected.name_ar : selected.name_en) : "";
-  const selectedArea = selected ? (locale === "ar" ? selected.area_ar : selected.area_en) : "";
-  const selectedDesc = selected ? (locale === "ar" ? selected.description_ar : selected.description_en) : "";
+  const unlocked = active ? progress.unlockedGemIds.includes(active.id) : false;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-extrabold">{t("map.title")}</h1>
-          <p className="text-sm text-slate-400">{t("map.hint")}</p>
-        </div>
-        <div className="text-sm text-slate-300">
-          <span className="text-slate-400">{t("labels.points")}:</span>{" "}
-          <span className="font-semibold text-brandTeal">{progress.totalPoints}</span>
-        </div>
-      </div>
-
-      <FilterBar filters={filters} onChange={setFilters} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 rounded-2xl border border-slate-800/70 bg-slate-950/40 overflow-hidden shadow-glow">
-          <div ref={mapContainerRef} className="h-[520px] w-full" />
-        </div>
-
-        <aside className="rounded-2xl border border-slate-800/70 bg-slate-950/40 p-4 shadow-glow">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="text-slate-200 font-semibold">{t("map.panelTitle")}</div>
-              <div className="text-xs text-slate-500">{loading ? t("labels.loading") : `${filteredGems.length} gems`}</div>
+    <div className="px-4 py-6">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold text-white">{t("map.title")}</h1>
+            <div className="text-sm text-slate-300">
+              {t("map.points")}: <span className="font-semibold text-white">{progress.totalPoints}</span>
             </div>
-            {selected && (
-              <button
-                onClick={() => setSelected(null)}
-                className="px-3 py-1.5 text-xs rounded-xl border border-slate-800/70 bg-slate-900/40 hover:bg-slate-900/60"
-              >
-                ✕
-              </button>
-            )}
           </div>
 
-          {!selected ? (
-            <div className="mt-4 text-sm text-slate-400">
-              {t("map.hint")}
-              <div className="mt-3 text-xs text-slate-500">
-                Tip: Use search + filters to find your next unlock.
-              </div>
-            </div>
-          ) : (
-            <div className="mt-4 space-y-3">
-              <img
-                src={selected.images?.[0] ?? "/gems/al-qudra-lakes.svg"}
-                className="w-full h-36 object-cover rounded-xl border border-slate-800/70"
-                alt={selectedName}
-              />
+          <div className="flex gap-2">
+            <Link to={`/${loc}/collection`} className="rounded-xl bg-white/10 px-4 py-2 text-white hover:bg-white/15">
+              {t("map.myCollection")}
+            </Link>
+            <Link to={`/${loc}`} className="rounded-xl bg-white/10 px-4 py-2 text-white hover:bg-white/15">
+              {t("common.home")}
+            </Link>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-4 grid gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 md:grid-cols-4">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-white outline-none focus:border-teal-400/50"
+            placeholder={t("map.search")}
+          />
+
+          <select
+            value={emirate}
+            onChange={(e) => setEmirate(e.target.value)}
+            className="rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-white outline-none"
+          >
+            <option value="all">{t("map.filters.allEmirates")}</option>
+            {EMIRATES.map((em) => (
+              <option key={em} value={em}>
+                {em}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={budget}
+            onChange={(e) => setBudget(e.target.value)}
+            className="rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-white outline-none"
+          >
+            <option value="all">{t("map.filters.allBudgets")}</option>
+            <option value="free">{t("budget.free")}</option>
+            <option value="low">{t("budget.low")}</option>
+            <option value="mid">{t("budget.mid")}</option>
+          </select>
+
+          <button
+            type="button"
+            onClick={() => setPhotogenic((v) => !v)}
+            className={`rounded-xl border border-white/10 px-4 py-2 text-white ${
+              photogenic ? "bg-teal-500/20" : "bg-black/30"
+            }`}
+          >
+            {t("map.filters.photogenic")} {photogenic ? "✓" : ""}
+          </button>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+            <div ref={containerRef} className="h-[70vh] w-full" />
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            {!active ? (
+              <div className="text-slate-300">{t("map.pick")}</div>
+            ) : (
               <div>
-                <div className="font-bold text-slate-100">{selectedName}</div>
-                <div className="text-sm text-slate-400">{selectedArea}</div>
-              </div>
-              <p className="text-sm text-slate-300">{selectedDesc}</p>
+                <div className="text-lg font-semibold text-white">
+                  {loc === "ar" ? active.name_ar : active.name_en}
+                </div>
+                <div className="mt-1 text-sm text-slate-400">
+                  {loc === "ar" ? active.area_ar : active.area_en} • {active.emirate}
+                </div>
 
-              <div className="flex flex-wrap gap-2">
-                {selected.tags.slice(0, 6).map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-xs px-2 py-1 rounded-full bg-slate-900/60 border border-slate-800/70 text-slate-300"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
+                <img
+                  src={active.images?.[0] ?? "/gems/dubai-skyline.svg"}
+                  alt=""
+                  className="mt-3 h-40 w-full rounded-xl border border-white/10 object-cover"
+                />
 
-              <div className="flex items-center justify-between gap-3 pt-1">
-                {selected.google_maps_url ? (
+                <p className="mt-3 text-sm text-slate-200">
+                  {loc === "ar" ? active.description_ar : active.description_en}
+                </p>
+
+                {active.google_maps_url && (
                   <a
-                    className="text-sm text-brandTeal hover:underline"
-                    href={selected.google_maps_url}
+                    href={active.google_maps_url}
                     target="_blank"
                     rel="noreferrer"
+                    className="mt-3 inline-block text-sm text-teal-300 hover:text-teal-200"
                   >
-                    {t("actions.openMaps")}
+                    {t("common.openMaps")} →
                   </a>
-                ) : (
-                  <span className="text-sm text-slate-500">{t("labels.noMaps")}</span>
                 )}
 
-                <button
-                  disabled={selectedUnlocked}
-                  onClick={() => unlock(selected.id)}
-                  className={[
-                    "px-4 py-2 rounded-xl text-sm font-semibold transition border",
-                    selectedUnlocked
-                      ? "bg-slate-900/40 text-slate-400 border-slate-800/70 cursor-not-allowed"
-                      : "bg-brandOrange/20 text-brandOrange border-brandOrange/30 hover:bg-brandOrange/25"
-                  ].join(" ")}
-                >
-                  {selectedUnlocked ? t("actions.unlocked") : t("actions.unlock")}
-                </button>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    type="button"
+                    disabled={unlocked}
+                    onClick={() => unlock(active)}
+                    className={`flex-1 rounded-xl px-4 py-2 font-medium text-white ${
+                      unlocked ? "bg-white/10 text-slate-400" : "bg-teal-500/20 hover:bg-teal-500/30"
+                    }`}
+                  >
+                    {unlocked ? t("map.unlocked") : t("map.unlock")}
+                  </button>
+
+                  <Link
+                    to={`/${loc}/gem/${active.id}`}
+                    className="rounded-xl bg-white/10 px-4 py-2 text-white hover:bg-white/15"
+                  >
+                    {t("common.details")}
+                  </Link>
+                </div>
               </div>
+            )}
+
+            <div className="mt-4 border-t border-white/10 pt-4 text-xs text-slate-400">
+              {t("map.count")} {filtered.length}
             </div>
-          )}
-        </aside>
+          </div>
+        </div>
       </div>
     </div>
   );
