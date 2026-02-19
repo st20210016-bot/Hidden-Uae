@@ -1,112 +1,110 @@
 // /src/HomePage.tsx
 import { useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
-import type { Gem, Locale } from "./types";
+
+import type { Gem, Locale, ProgressState } from "./types";
+import { isLocale } from "./types";
 import { loadProgress, saveProgress } from "./storage";
-import GemCard from "./GemCard";
-import BadgeRow from "./BadgeRow";
-import { computeEarnedBadges } from "./badges";
 
-export default function HomePage({ locale }: { locale: Locale }) {
-  const { t, i18n } = useTranslation();
+export default function HomePage() {
+  const { locale } = useParams();
+  const loc: Locale = isLocale(locale) ? locale : "en";
+  const { t } = useTranslation();
+
   const [gems, setGems] = useState<Gem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState(loadProgress());
+  const [progress, setProgress] = useState<ProgressState>(() => loadProgress());
 
   useEffect(() => {
-    void i18n.changeLanguage(locale);
-  }, [locale, i18n]);
-
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const res = await fetch("/data/gems.json");
-      const data = (await res.json()) as Gem[];
-      setGems(data);
-      setLoading(false);
-    })();
+    fetch("/data/gems.json")
+      .then((r) => r.json())
+      .then((d) => setGems(Array.isArray(d) ? (d as Gem[]) : []))
+      .catch(() => setGems([]));
   }, []);
 
   const featured = useMemo(() => gems.slice(0, 6), [gems]);
+  const unlockedCount = progress.unlockedGemIds.length;
 
-  const earned = useMemo(() => computeEarnedBadges({ unlockedGemIds: progress.unlockedGemIds, allGems: gems }), [progress, gems]);
-
-  const onUnlock = (id: string) => {
-    if (progress.unlockedGemIds.includes(id)) return;
-    const next = {
-      ...progress,
-      unlockedGemIds: [...progress.unlockedGemIds, id],
-      totalPoints: progress.totalPoints + 5
-    };
-    next.earnedBadges = computeEarnedBadges({ unlockedGemIds: next.unlockedGemIds, allGems: gems });
-    setProgress(next);
-    saveProgress(next);
-  };
+  // Keep localStorage in sync if state changes
+  useEffect(() => {
+    saveProgress(progress);
+  }, [progress]);
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-3xl border border-slate-800/70 bg-slate-950/40 p-6 md:p-10 shadow-glow">
-        <div className="flex flex-col md:flex-row gap-6 md:items-center md:justify-between">
-          <div className="space-y-3">
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-              {t("home.heroTitle")}
-            </h1>
-            <p className="text-slate-300 max-w-2xl">{t("home.heroSubtitle")}</p>
+    <div className="px-4 py-10">
+      <div className="mx-auto max-w-6xl">
+        <div className="flex flex-col items-start justify-between gap-6 rounded-3xl border border-white/10 bg-white/5 p-8 shadow-[0_0_40px_rgba(45,212,191,0.12)] md:flex-row md:items-center">
+          <div>
+            <div className="flex items-center gap-4">
+              <img src="/logo.png" alt="Hidden UAE" className="h-14 w-14 rounded-2xl border border-white/10 bg-black/30" />
+              <h1 className="text-4xl font-semibold text-white">Hidden UAE</h1>
+            </div>
+            <p className="mt-3 max-w-xl text-slate-300">{t("home.subtitle")}</p>
 
-            <div className="flex flex-wrap gap-3 pt-2">
+            <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                to={`/${locale}/map`}
-                className="px-5 py-3 rounded-2xl font-semibold bg-brandTeal/20 text-brandTeal border border-brandTeal/30 hover:bg-brandTeal/25"
+                to={`/${loc}/map`}
+                className="rounded-xl bg-teal-500/20 px-5 py-3 font-medium text-white shadow-[0_0_25px_rgba(45,212,191,0.25)] hover:bg-teal-500/30"
               >
-                {t("actions.exploreMap")}
+                {t("home.cta.map")}
               </Link>
               <Link
-                to={`/${locale}/collection`}
-                className="px-5 py-3 rounded-2xl font-semibold bg-brandOrange/20 text-brandOrange border border-brandOrange/30 hover:bg-brandOrange/25"
+                to={`/${loc}/collection`}
+                className="rounded-xl bg-orange-500/15 px-5 py-3 font-medium text-white shadow-[0_0_25px_rgba(251,146,60,0.18)] hover:bg-orange-500/25"
               >
-                {t("actions.myCollection")}
+                {t("home.cta.collection")}
               </Link>
+            </div>
+
+            <div className="mt-6 text-sm text-slate-300">
+              {t("home.progress")}{" "}
+              <span className="font-semibold text-white">
+                {unlockedCount}
+              </span>{" "}
+              • {t("home.points")}{" "}
+              <span className="font-semibold text-white">
+                {progress.totalPoints}
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center justify-center md:justify-end">
-            <img
-              src="/logo.png"
-              alt="Hidden UAE"
-              className="h-28 w-28 md:h-32 md:w-32 rounded-3xl shadow-glow ring-1 ring-slate-700/60"
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-3">
-        <div className="flex items-end justify-between">
-          <div>
-            <h2 className="text-xl font-bold">{t("labels.featured")}</h2>
-            <p className="text-sm text-slate-400">{t("home.featuredHint")}</p>
-          </div>
-          <div className="text-sm text-slate-300">
-            <span className="text-slate-400">{t("labels.points")}:</span>{" "}
-            <span className="font-semibold text-brandTeal">{progress.totalPoints}</span>
+          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-black/30 p-5">
+            <div className="text-sm text-slate-300">{t("home.tipTitle")}</div>
+            <div className="mt-2 text-white">{t("home.tipBody")}</div>
+            <Link
+              to={`/${loc}/submit`}
+              className="mt-4 inline-block rounded-xl bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/15"
+            >
+              {t("home.cta.submit")}
+            </Link>
           </div>
         </div>
 
-        {loading ? (
-          <div className="text-slate-400">{t("labels.loading")}</div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {featured.map((g) => (
-              <GemCard key={g.id} locale={locale} gem={g} progress={progress} onUnlock={onUnlock} compact />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xl font-bold">{t("home.topBadges")}</h2>
-        <BadgeRow earned={earned} previewCount={3} />
-      </section>
+        <h2 className="mt-10 text-xl font-semibold text-white">{t("home.featured")}</h2>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {featured.map((g) => (
+            <div key={g.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <img
+                src={g.images?.[0] ?? "/gems/dubai-skyline.svg"}
+                alt={loc === "ar" ? g.name_ar : g.name_en}
+                className="h-40 w-full rounded-xl border border-white/10 object-cover"
+              />
+              <div className="mt-3 text-white font-medium">
+                {loc === "ar" ? g.name_ar : g.name_en}
+              </div>
+              <div className="mt-1 text-xs text-slate-400">
+                {loc === "ar" ? g.area_ar : g.area_en} • {g.emirate}
+              </div>
+              <Link
+                to={`/${loc}/gem/${g.id}`}
+                className="mt-3 inline-block text-sm text-teal-300 hover:text-teal-200"
+              >
+                {t("common.viewDetails")} →
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
