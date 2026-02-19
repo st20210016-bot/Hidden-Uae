@@ -1,0 +1,73 @@
+<!-- /public/gems/cafe-neon.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#030712"/>
+      <stop offset="0.5" stop-color="#0b1223"/>
+      <stop offset="1" stop-color="#1b0b22"/>
+    </linearGradient>
+
+    <radialGradient id="lampTeal" cx="35%" cy="30%" r="55%">
+      <stop offset="0" stop-color="#2dd4bf" stop-opacity="0.35"/>
+      <stop offset="0.55" stop-color="#2dd4bf" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="lampOrange" cx="78%" cy="38%" r="60%">
+      <stop offset="0" stop-color="#fb923c" stop-opacity="0.32"/>
+      <stop offset="0.55" stop-color="#fb923c" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="7" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="grain" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="matrix" values="
+        0 0 0 0 0
+        0 0 0 0 0
+        0 0 0 0 0
+        0 0 0 .20 0"/>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="900" fill="url(#bg)"/>
+  <rect width="1400" height="900" fill="url(#lampTeal)"/>
+  <rect width="1400" height="900" fill="url(#lampOrange)"/>
+
+  <!-- window frame -->
+  <g fill="#050816" opacity="0.8">
+    <rect x="180" y="160" width="1040" height="560" rx="32" />
+    <rect x="220" y="200" width="960" height="480" rx="24" fill="#0b1223" opacity="0.7"/>
+  </g>
+
+  <!-- neon sign -->
+  <g filter="url(#glow)">
+    <rect x="320" y="270" width="520" height="120" rx="26" fill="#050816" opacity="0.7" stroke="#2dd4bf" stroke-opacity="0.25"/>
+    <path d="M380,330 h190" stroke="#2dd4bf" stroke-width="10" stroke-linecap="round"/>
+    <path d="M600,330 h170" stroke="#fb923c" stroke-width="10" stroke-linecap="round" opacity="0.95"/>
+    <circle cx="560" cy="330" r="10" fill="#2dd4bf"/>
+  </g>
+
+  <!-- cup -->
+  <g filter="url(#glow)">
+    <path d="M920,500 h220 a30,30 0 0 1 30,30 v70 a80,80 0 0 1 -80,80 h-120 a80,80 0 0 1 -80,-80 v-70 a30,30 0 0 1 30,-30 z"
+          fill="#050816" stroke="#fb923c" stroke-opacity="0.25" stroke-width="3"/>
+    <path d="M1140,540 h35 a40,40 0 0 1 0,80 h-35" fill="none" stroke="#2dd4bf" stroke-opacity="0.35" stroke-width="10" stroke-linecap="round"/>
+    <path d="M960,470 c30,-50 80,-50 110,0" fill="none" stroke="#2dd4bf" stroke-opacity="0.22" stroke-width="10" stroke-linecap="round"/>
+  </g>
+
+  <!-- table -->
+  <rect x="0" y="710" width="1400" height="190" fill="#020617" opacity="0.85"/>
+  <path d="M0,720 C280,690 540,760 780,730 C1040,700 1200,760 1400,740"
+        fill="none" stroke="#fb923c" stroke-opacity="0.14" stroke-width="10"/>
+
+  <rect width="1400" height="900" filter="url(#grain)" opacity="0.35"/>
+  <rect width="1400" height="900" fill="#000" opacity="0.10"/>
+</svg>
