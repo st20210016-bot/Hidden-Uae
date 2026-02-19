@@ -10,7 +10,8 @@ const DEFAULT_STATE: ProgressState = {
   totalPoints: 0,
   earnedBadges: [],
   preferredLocale: "en",
-  submissions: []
+  submissions: [],
+  points: 0
 };
 
 function safeParse(raw: string | null): any {
@@ -22,60 +23,66 @@ function safeParse(raw: string | null): any {
   }
 }
 
-/**
- * Some older code might call loadProgress(locale) or loadProgress(key, locale).
- * We accept extra args and ignore them to keep builds passing.
- */
-export function loadProgress(_arg1?: unknown, _arg2?: unknown): ProgressState {
-  const parsed = safeParse(localStorage.getItem(KEY));
-  if (!parsed || typeof parsed !== "object") return { ...DEFAULT_STATE };
+function normalizeState(input: any): ProgressState {
+  if (!input || typeof input !== "object") return { ...DEFAULT_STATE };
 
-  const unlockedGemIds = Array.isArray(parsed.unlockedGemIds)
-    ? parsed.unlockedGemIds.filter((x: any) => typeof x === "string")
+  const unlockedGemIds = Array.isArray(input.unlockedGemIds)
+    ? input.unlockedGemIds.filter((x: any) => typeof x === "string")
     : [];
 
-  // Canonical points field is totalPoints, but fallback to points if present
+  const earnedBadges = Array.isArray(input.earnedBadges)
+    ? input.earnedBadges.filter((x: any) => typeof x === "string")
+    : [];
+
+  const preferredLocale: Locale = input.preferredLocale === "ar" ? "ar" : "en";
+
+  const submissions = Array.isArray(input.submissions) ? (input.submissions as Submission[]) : [];
+
   const totalPoints =
-    typeof parsed.totalPoints === "number"
-      ? parsed.totalPoints
-      : typeof parsed.points === "number"
-        ? parsed.points
+    typeof input.totalPoints === "number"
+      ? input.totalPoints
+      : typeof input.points === "number"
+        ? input.points
         : 0;
-
-  const earnedBadges = Array.isArray(parsed.earnedBadges)
-    ? parsed.earnedBadges.filter((x: any) => typeof x === "string")
-    : [];
-
-  const preferredLocale: Locale = parsed.preferredLocale === "ar" ? "ar" : "en";
-
-  const submissions = Array.isArray(parsed.submissions) ? (parsed.submissions as Submission[]) : [];
 
   return {
     unlockedGemIds,
-    totalPoints,
-    earnedBadges,
+    earnedBadges: earnedBadges as any,
     preferredLocale,
     submissions,
-    // keep backward-compat mirror
+    totalPoints,
     points: totalPoints
   };
 }
 
 /**
- * Some older code might call saveProgress(locale, state) or saveProgress(state, locale).
- * We accept optional extra args and ignore them.
+ * Overloads to satisfy any existing call sites:
+ * - loadProgress()
+ * - loadProgress(locale)
+ * - loadProgress(locale, whatever)
  */
-export function saveProgress(state: ProgressState, _arg2?: unknown): void {
-  const normalized: ProgressState = {
-    ...DEFAULT_STATE,
-    ...state,
-    totalPoints: typeof state.totalPoints === "number" ? state.totalPoints : state.points ?? 0,
-    points: typeof state.totalPoints === "number" ? state.totalPoints : state.points ?? 0
-  };
+export function loadProgress(): ProgressState;
+export function loadProgress(locale: Locale): ProgressState;
+export function loadProgress(locale: Locale, _anything: unknown): ProgressState;
+export function loadProgress(_arg1?: unknown, _arg2?: unknown): ProgressState {
+  const parsed = safeParse(localStorage.getItem(KEY));
+  return normalizeState(parsed);
+}
+
+/**
+ * Overloads to satisfy any existing call sites:
+ * - saveProgress(state)
+ * - saveProgress(locale, state)
+ */
+export function saveProgress(state: ProgressState): void;
+export function saveProgress(locale: Locale, state: ProgressState): void;
+export function saveProgress(arg1: any, arg2?: any): void {
+  const state: ProgressState = typeof arg2 === "object" && arg2 ? arg2 : arg1;
+  const normalized = normalizeState(state);
   localStorage.setItem(KEY, JSON.stringify(normalized));
 }
 
-export function setPreferredLocale(locale: Locale): void {
+export function setPreferredLocale(locale: Locale) {
   const s = loadProgress();
   saveProgress({ ...s, preferredLocale: locale });
 }
@@ -84,18 +91,12 @@ export function getSubmissions(): Submission[] {
   return loadProgress().submissions ?? [];
 }
 
-/**
- * Your SubmitPage expects `saveSubmissions(array)`
- */
-export function saveSubmissions(items: Submission[]): void {
+export function saveSubmissions(items: Submission[]) {
   const s = loadProgress();
   saveProgress({ ...s, submissions: items });
 }
 
-/**
- * Convenience helper
- */
-export function addSubmission(item: Submission): void {
+export function addSubmission(item: Submission) {
   const prev = getSubmissions();
   saveSubmissions([item, ...prev]);
 }
