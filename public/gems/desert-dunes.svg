@@ -1,0 +1,27 @@
+<!-- /public/gems/desert-dunes.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#050816"/>
+      <stop offset="1" stop-color="#1b0b22"/>
+    </linearGradient>
+    <linearGradient id="sand" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fb923c" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#2dd4bf" stop-opacity="0.18"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="800" fill="url(#bg)"/>
+
+  <path d="M0,620 C200,540 350,710 560,640 C740,580 900,650 1200,560 L1200,800 L0,800 Z" fill="url(#sand)"/>
+  <path d="M0,690 C230,600 420,770 650,700 C860,640 980,710 1200,640 L1200,800 L0,800 Z" fill="#0b1223" opacity="0.55"/>
+
+  <circle cx="900" cy="170" r="70" fill="#2dd4bf" opacity="0.12"/>
+  <circle cx="930" cy="190" r="45" fill="#fb923c" opacity="0.14"/>
+
+  <g>
+    <rect x="60" y="60" width="540" height="110" rx="22" fill="#0b1223" opacity="0.65" stroke="#fb923c" stroke-opacity="0.25"/>
+    <text x="95" y="125" fill="#e2e8f0" font-size="44" font-family="system-ui, -apple-system, Segoe UI, Roboto">Desert Dunes</text>
+    <text x="95" y="155" fill="#94a3b8" font-size="22" font-family="system-ui, -apple-system, Segoe UI, Roboto">Placeholder thumbnail</text>
+  </g>
+</svg>
