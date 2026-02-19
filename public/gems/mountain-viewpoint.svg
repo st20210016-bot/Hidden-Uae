@@ -1,0 +1,58 @@
+<!-- /public/gems/mountain-viewpoint.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#020617"/>
+      <stop offset="0.55" stop-color="#071025"/>
+      <stop offset="1" stop-color="#1b0b22"/>
+    </linearGradient>
+
+    <radialGradient id="sun" cx="72%" cy="28%" r="42%">
+      <stop offset="0" stop-color="#fb923c" stop-opacity="0.30"/>
+      <stop offset="0.45" stop-color="#fb923c" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="ridge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0b1223" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#050816" stop-opacity="0.95"/>
+    </linearGradient>
+
+    <filter id="grain" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.78" numOctaves="2" stitchTiles="stitch" />
+      <feColorMatrix type="matrix" values="
+        0 0 0 0 0
+        0 0 0 0 0
+        0 0 0 0 0
+        0 0 0 .18 0"/>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="900" fill="url(#sky)"/>
+  <rect width="1400" height="900" fill="url(#sun)"/>
+
+  <!-- far mountains -->
+  <path d="M0,520 L220,360 L420,470 L620,330 L840,480 L1040,360 L1400,520 L1400,900 L0,900 Z"
+        fill="#050816" opacity="0.70"/>
+  <!-- mid ridge -->
+  <path d="M0,640 L260,430 L470,600 L680,420 L900,650 L1120,470 L1400,640 L1400,900 L0,900 Z"
+        fill="url(#ridge)"/>
+
+  <!-- highlight edge -->
+  <path d="M0,640 L260,430 L470,600 L680,420 L900,650 L1120,470 L1400,640"
+        fill="none" stroke="#2dd4bf" stroke-opacity="0.12" stroke-width="10"/>
+
+  <!-- foreground cliff -->
+  <path d="M0,900 L0,720 C160,690 210,760 320,735 C430,710 520,780 640,760 C760,740 880,820 1020,790 C1160,765 1240,830 1400,805 L1400,900 Z"
+        fill="#020617" opacity="0.8"/>
+
+  <!-- tiny silhouette person -->
+  <g opacity="0.8">
+    <circle cx="980" cy="740" r="8" fill="#0b1223"/>
+    <rect x="972" y="748" width="16" height="28" rx="6" fill="#0b1223"/>
+    <path d="M960,770 L1000,770" stroke="#fb923c" stroke-opacity="0.18" stroke-width="6"/>
+  </g>
+
+  <rect width="1400" height="900" filter="url(#grain)" opacity="0.35"/>
+  <rect width="1400" height="900" fill="#000" opacity="0.12"/>
+</svg>
