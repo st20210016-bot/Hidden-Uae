@@ -1,27 +1,74 @@
 <!-- /public/gems/desert-dunes.svg -->
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#050816"/>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#020617"/>
+      <stop offset="0.6" stop-color="#090a1a"/>
       <stop offset="1" stop-color="#1b0b22"/>
     </linearGradient>
-    <linearGradient id="sand" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#fb923c" stop-opacity="0.35"/>
-      <stop offset="1" stop-color="#2dd4bf" stop-opacity="0.18"/>
+
+    <radialGradient id="moonGlow" cx="78%" cy="22%" r="40%">
+      <stop offset="0" stop-color="#fb923c" stop-opacity="0.25"/>
+      <stop offset="0.45" stop-color="#2dd4bf" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="dune1" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fb923c" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#2dd4bf" stop-opacity="0.10"/>
     </linearGradient>
+
+    <linearGradient id="dune2" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0b1223" stop-opacity="0.65"/>
+      <stop offset="1" stop-color="#0b1223" stop-opacity="0.35"/>
+    </linearGradient>
+
+    <filter id="grain" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" />
+      <feColorMatrix type="matrix" values="
+        0 0 0 0 0
+        0 0 0 0 0
+        0 0 0 0 0
+        0 0 0 .20 0"/>
+    </filter>
+
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
 
-  <rect width="1200" height="800" fill="url(#bg)"/>
+  <rect width="1400" height="900" fill="url(#sky)"/>
+  <rect width="1400" height="900" fill="url(#moonGlow)"/>
 
-  <path d="M0,620 C200,540 350,710 560,640 C740,580 900,650 1200,560 L1200,800 L0,800 Z" fill="url(#sand)"/>
-  <path d="M0,690 C230,600 420,770 650,700 C860,640 980,710 1200,640 L1200,800 L0,800 Z" fill="#0b1223" opacity="0.55"/>
-
-  <circle cx="900" cy="170" r="70" fill="#2dd4bf" opacity="0.12"/>
-  <circle cx="930" cy="190" r="45" fill="#fb923c" opacity="0.14"/>
-
-  <g>
-    <rect x="60" y="60" width="540" height="110" rx="22" fill="#0b1223" opacity="0.65" stroke="#fb923c" stroke-opacity="0.25"/>
-    <text x="95" y="125" fill="#e2e8f0" font-size="44" font-family="system-ui, -apple-system, Segoe UI, Roboto">Desert Dunes</text>
-    <text x="95" y="155" fill="#94a3b8" font-size="22" font-family="system-ui, -apple-system, Segoe UI, Roboto">Placeholder thumbnail</text>
+  <!-- stars -->
+  <g fill="#e2e8f0" opacity="0.8">
+    <circle cx="120" cy="140" r="2"/><circle cx="260" cy="110" r="1.5"/><circle cx="410" cy="170" r="1.8"/>
+    <circle cx="650" cy="130" r="1.6"/><circle cx="840" cy="100" r="2.2"/><circle cx="1100" cy="160" r="1.7"/>
   </g>
+
+  <!-- dunes -->
+  <path d="M0,590 C220,490 390,720 630,610 C840,510 1060,650 1400,520 L1400,900 L0,900 Z"
+        fill="url(#dune1)" filter="url(#soft)"/>
+  <path d="M0,690 C240,585 470,820 740,700 C980,595 1130,770 1400,650 L1400,900 L0,900 Z"
+        fill="url(#dune2)"/>
+
+  <!-- ridge highlights -->
+  <path d="M0,605 C220,515 390,735 630,625 C840,525 1060,665 1400,535"
+        fill="none" stroke="#fb923c" stroke-opacity="0.16" stroke-width="8"/>
+  <path d="M0,705 C240,600 470,835 740,715 C980,610 1130,785 1400,665"
+        fill="none" stroke="#2dd4bf" stroke-opacity="0.12" stroke-width="7"/>
+
+  <!-- tiny silhouette -->
+  <g opacity="0.75">
+    <path d="M260,700 c10,-10 25,-10 35,0 c8,8 8,22 0,30 c-10,10 -25,10 -35,0 c-8,-8 -8,-22 0,-30 z"
+          fill="#050816"/>
+    <path d="M285,695 l8,35 l-18,0 z" fill="#050816"/>
+  </g>
+
+  <rect width="1400" height="900" filter="url(#grain)" opacity="0.35"/>
+  <rect width="1400" height="900" fill="#000" opacity="0.12"/>
 </svg>
