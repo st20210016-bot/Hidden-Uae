@@ -1,7 +1,7 @@
 // /src/types.ts
 export type Locale = "en" | "ar";
 
-export function isLocale(v: string | undefined | null): v is Locale {
+export function isLocale(v: unknown): v is Locale {
   return v === "en" || v === "ar";
 }
 
@@ -53,18 +53,10 @@ export type BadgeKey =
 
 export type Badge = {
   key: BadgeKey;
-  titleKey: string; // i18n key
-  descKey: string; // i18n key
-  icon: string; // emoji or short label
-  goal: number; // target count, varies per badge
-};
-
-export type ProgressState = {
-  unlockedGemIds: string[];
-  points: number;
-  earnedBadges: BadgeKey[];
-  preferredLocale: Locale;
-  submissions: Submission[];
+  titleKey: string;
+  descKey: string;
+  icon: string;
+  goal: number;
 };
 
 export type Submission = {
@@ -76,4 +68,20 @@ export type Submission = {
   photogenic: boolean;
   budget: Budget;
   createdAt: string;
+};
+
+/**
+ * NOTE:
+ * Your pages are using `totalPoints`, so that is the canonical field.
+ * We also keep `points` optional for backward-compat if older code stored it.
+ */
+export type ProgressState = {
+  unlockedGemIds: string[];
+  totalPoints: number;
+  earnedBadges: BadgeKey[];
+  preferredLocale: Locale;
+  submissions: Submission[];
+
+  // backward-compat (optional)
+  points?: number;
 };
