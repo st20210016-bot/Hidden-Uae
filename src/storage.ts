@@ -1,20 +1,59 @@
 // /src/storage.ts
-import type { Submission } from "./types";
+import type { BadgeKey, Locale, ProgressState, Submission } from "./types";
 
-const KEY_SUBMISSIONS = "hiddenUAE:submissions";
+const KEY = "hiddenUAE:progress";
 
-export function getSubmissions(): Submission[] {
+const DEFAULT_STATE: ProgressState = {
+  unlockedGemIds: [],
+  points: 0,
+  earnedBadges: [],
+  preferredLocale: "en",
+  submissions: []
+};
+
+function safeParse<T>(raw: string | null): T | null {
+  if (!raw) return null;
   try {
-    const raw = localStorage.getItem(KEY_SUBMISSIONS);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed as Submission[];
+    return JSON.parse(raw) as T;
   } catch {
-    return [];
+    return null;
   }
 }
 
-export function saveSubmissions(items: Submission[]) {
-  localStorage.setItem(KEY_SUBMISSIONS, JSON.stringify(items));
+export function loadProgress(): ProgressState {
+  const parsed = safeParse<Partial<ProgressState>>(localStorage.getItem(KEY));
+  if (!parsed) return { ...DEFAULT_STATE };
+
+  return {
+    unlockedGemIds: Array.isArray(parsed.unlockedGemIds)
+      ? parsed.unlockedGemIds.filter((x): x is string => typeof x === "string")
+      : [],
+    points: typeof parsed.points === "number" ? parsed.points : 0,
+    earnedBadges: Array.isArray(parsed.earnedBadges)
+      ? (parsed.earnedBadges.filter((x) => typeof x === "string") as BadgeKey[])
+      : [],
+    preferredLocale: parsed.preferredLocale === "ar" ? "ar" : "en",
+    submissions: Array.isArray(parsed.submissions)
+      ? (parsed.submissions as Submission[])
+      : []
+  };
+}
+
+export function saveProgress(next: ProgressState) {
+  localStorage.setItem(KEY, JSON.stringify(next));
+}
+
+export function setPreferredLocale(locale: Locale) {
+  const s = loadProgress();
+  saveProgress({ ...s, preferredLocale: locale });
+}
+
+export function addSubmission(submission: Submission) {
+  const s = loadProgress();
+  const next: ProgressState = { ...s, submissions: [submission, ...(s.submissions ?? [])] };
+  saveProgress(next);
+}
+
+export function getSubmissions(): Submission[] {
+  return loadProgress().submissions ?? [];
 }
