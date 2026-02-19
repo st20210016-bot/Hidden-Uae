@@ -1,64 +1,20 @@
 // /src/storage.ts
-import type { BadgeKey, Locale } from "./types";
+import type { Submission } from "./types";
 
-const KEY = "hidden-uae:v1";
+const KEY_SUBMISSIONS = "hiddenUAE:submissions";
 
-export type Submission = {
-  id: string;
-  name: string;
-  emirate: string;
-  mapsLink: string;
-  why: string;
-  photogenic: boolean;
-  budget: "free" | "low" | "mid";
-  createdAt: number;
-};
-
-export type ProgressState = {
-  unlockedGemIds: string[];
-  totalPoints: number;
-  earnedBadges: BadgeKey[];
-  preferredLocale: Locale;
-  submissions: Submission[];
-};
-
-const DEFAULT: ProgressState = {
-  unlockedGemIds: [],
-  totalPoints: 0,
-  earnedBadges: [],
-  preferredLocale: "en",
-  submissions: []
-};
-
-export function loadProgress(): ProgressState {
+export function getSubmissions(): Submission[] {
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return DEFAULT;
-    const parsed = JSON.parse(raw) as Partial<ProgressState>;
-    return {
-      ...DEFAULT,
-      ...parsed,
-      unlockedGemIds: Array.isArray(parsed.unlockedGemIds) ? parsed.unlockedGemIds : [],
-      earnedBadges: Array.isArray(parsed.earnedBadges) ? parsed.earnedBadges : [],
-      submissions: Array.isArray(parsed.submissions) ? parsed.submissions : []
-    };
+    const raw = localStorage.getItem(KEY_SUBMISSIONS);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed as Submission[];
   } catch {
-    return DEFAULT;
+    return [];
   }
 }
 
-export function saveProgress(next: ProgressState) {
-  localStorage.setItem(KEY, JSON.stringify(next));
-}
-
-export function setPreferredLocale(locale: Locale) {
-  const p = loadProgress();
-  p.preferredLocale = locale;
-  saveProgress(p);
-}
-
-export function addSubmission(sub: Submission) {
-  const p = loadProgress();
-  p.submissions = [sub, ...p.submissions];
-  saveProgress(p);
+export function saveSubmissions(items: Submission[]) {
+  localStorage.setItem(KEY_SUBMISSIONS, JSON.stringify(items));
 }
