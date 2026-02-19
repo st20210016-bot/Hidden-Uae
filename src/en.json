@@ -1,0 +1,89 @@
+// /src/en.json
+{
+  "tagline": "Unlock hidden gems. Earn points. Build your collection.",
+  "nav": {
+    "map": "Explore Map",
+    "collection": "My Collection",
+    "submit": "Submit a Gem"
+  },
+  "actions": {
+    "exploreMap": "Explore Map",
+    "myCollection": "My Collection",
+    "unlock": "Unlock (+5)",
+    "unlocked": "Unlocked ✅",
+    "openMaps": "Open in Maps",
+    "viewDetails": "View details",
+    "back": "Back",
+    "downloadCard": "Download Share Card"
+  },
+  "labels": {
+    "featured": "Featured Gems",
+    "badges": "Badges",
+    "points": "Points",
+    "photogenic": "Photogenic",
+    "noMaps": "No map link",
+    "search": "Search gems...",
+    "filters": "Filters",
+    "emirate": "Emirate",
+    "budget": "Budget",
+    "photogenicOnly": "Photogenic only",
+    "unlockedGems": "Unlocked Gems",
+    "nothingUnlocked": "No gems unlocked yet. Go explore the map!",
+    "loading": "Loading..."
+  },
+  "budgets": {
+    "free": "Free",
+    "low": "Low",
+    "mid": "Mid"
+  },
+  "emirates": {
+    "Dubai": "Dubai",
+    "Abu Dhabi": "Abu Dhabi",
+    "Sharjah": "Sharjah",
+    "Ajman": "Ajman",
+    "Fujairah": "Fujairah",
+    "Ras Al Khaimah": "Ras Al Khaimah",
+    "Umm Al Quwain": "Umm Al Quwain"
+  },
+  "home": {
+    "heroTitle": "Hidden UAE",
+    "heroSubtitle": "A gamified map of UAE hidden gems. Unlock places, earn points, and collect badges.",
+    "topBadges": "Top badges",
+    "featuredHint": "Tap a gem to see details. Unlocking is free!"
+  },
+  "map": {
+    "title": "Explore Map",
+    "panelTitle": "Gem Details",
+    "hint": "Click a pin to reveal a gem. Unlock to earn points."
+  },
+  "collection": {
+    "title": "My Collection",
+    "shareTitle": "Share your progress",
+    "shareSubtitle": "Make a downloadable card for your socials."
+  },
+  "submit": {
+    "title": "Submit a Gem",
+    "subtitle": "Know a hidden gem? Drop it here (saved locally).",
+    "name": "Gem name",
+    "emirate": "Emirate",
+    "maps": "Google Maps link",
+    "why": "Why is it a gem?",
+    "budget": "Budget",
+    "photogenic": "Photogenic",
+    "send": "Submit",
+    "success": "Saved! Thanks for sharing ✨"
+  },
+  "badges": {
+    "first_unlock": { "title": "First Unlock", "desc": "Unlock 1 gem" },
+    "explorer": { "title": "Explorer", "desc": "Unlock 5 gems" },
+    "adventurer": { "title": "Adventurer", "desc": "Unlock 15 gems" },
+    "photographer": { "title": "Photographer", "desc": "Unlock 10 photogenic gems" },
+    "emirate_specialist": { "title": "Emirate Specialist", "desc": "Unlock 5 gems in the same emirate" }
+  },
+  "footer": {
+    "madeForFun": "Built as a static, gamified UAE map."
+  },
+  "errors": {
+    "notFound": "Page not found"
+  }
+}
