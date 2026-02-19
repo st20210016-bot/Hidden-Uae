@@ -1,0 +1,22 @@
+/* /src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(1000px 600px at 20% 10%, rgba(45, 212, 191, 0.18), transparent 60%),
+    radial-gradient(900px 600px at 80% 20%, rgba(251, 146, 60, 0.14), transparent 60%),
+    linear-gradient(135deg, #050816, #0b1223 55%, #1b0b22);
+  color: #e5e7eb;
+}
