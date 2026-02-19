@@ -1,10 +1,13 @@
 // /src/App.tsx
+import { useEffect } from "react";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
-import Navbar from "./Navbar";
-import Footer from "./Footer";
-import SparkleBg from "./SparkleBg";
+import { isLocale, type Locale } from "./types";
+import { setPreferredLocale } from "./storage";
+import { applyLocaleToDocument } from "./rtl";
 
+// Pages (adjust imports to your exact filenames)
 import HomePage from "./HomePage";
 import MapPage from "./MapPage";
 import CollectionPage from "./CollectionPage";
@@ -12,46 +15,76 @@ import SubmitPage from "./SubmitPage";
 import GemDetailPage from "./GemDetailPage";
 import NotFoundPage from "./NotFoundPage";
 
-import { Locale, isLocale } from "./types";
-import { applyLocaleToDocument } from "./rtl";
+function LocaleGuard({ children }: { children: React.ReactNode }) {
+  const { locale } = useParams();
+  const { i18n } = useTranslation();
 
-function LocaleLayout({ locale }: { locale: Locale }) {
-  applyLocaleToDocument(locale);
+  const loc: Locale = isLocale(locale) ? locale : "en";
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      <SparkleBg />
-      <Navbar locale={locale} />
-      <main className="flex-1">
-        <div className="mx-auto max-w-6xl px-4 py-6">
-          <Routes>
-            <Route index element={<HomePage locale={locale} />} />
-            <Route path="map" element={<MapPage locale={locale} />} />
-            <Route path="collection" element={<CollectionPage locale={locale} />} />
-            <Route path="submit" element={<SubmitPage locale={locale} />} />
-            <Route path="gem/:id" element={<GemDetailPage locale={locale} />} />
-            <Route path="*" element={<NotFoundPage locale={locale} />} />
-          </Routes>
-        </div>
-      </main>
-      <Footer locale={locale} />
-    </div>
-  );
+  // Redirect invalid locale to /en
+  if (!isLocale(locale)) {
+    return <Navigate to="/en" replace />;
+  }
+
+  useEffect(() => {
+    if (i18n.language !== loc) i18n.changeLanguage(loc);
+    setPreferredLocale(loc);
+    applyLocaleToDocument(loc);
+  }, [loc, i18n]);
+
+  return <>{children}</>;
 }
 
 export default function App() {
   return (
     <Routes>
+      {/* default route */}
       <Route path="/" element={<Navigate to="/en" replace />} />
-      <Route path="/:locale/*" element={<LocaleWrapper />} />
-      <Route path="*" element={<Navigate to="/en" replace />} />
+
+      {/* locale routes */}
+      <Route
+        path="/:locale"
+        element={
+          <LocaleGuard>
+            <HomePage />
+          </LocaleGuard>
+        }
+      />
+      <Route
+        path="/:locale/map"
+        element={
+          <LocaleGuard>
+            <MapPage />
+          </LocaleGuard>
+        }
+      />
+      <Route
+        path="/:locale/collection"
+        element={
+          <LocaleGuard>
+            <CollectionPage />
+          </LocaleGuard>
+        }
+      />
+      <Route
+        path="/:locale/submit"
+        element={
+          <LocaleGuard>
+            <SubmitPage />
+          </LocaleGuard>
+        }
+      />
+      <Route
+        path="/:locale/gem/:id"
+        element={
+          <LocaleGuard>
+            <GemDetailPage />
+          </LocaleGuard>
+        }
+      />
+
+      {/* fallback */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
-}
-
-function LocaleWrapper() {
-  const params = useParams();
-  const locale = params.locale ?? "en";
-  const safe: Locale = isLocale(locale) ? locale : "en";
-  return <LocaleLayout locale={safe} />;
 }
