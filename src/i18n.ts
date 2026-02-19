@@ -1,11 +1,12 @@
 // /src/i18n.ts
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import en from "./en.json";
-import ar from "./ar.json";
 import { loadProgress } from "./storage";
 
-const preferred = (() => {
+import en from "./en.json";
+import ar from "./ar.json";
+
+const saved = (() => {
   try {
     return loadProgress().preferredLocale;
   } catch {
@@ -13,12 +14,12 @@ const preferred = (() => {
   }
 })();
 
-void i18n.use(initReactI18next).init({
+i18n.use(initReactI18next).init({
   resources: {
     en: { translation: en },
     ar: { translation: ar }
   },
-  lng: preferred,
+  lng: saved,
   fallbackLng: "en",
   interpolation: { escapeValue: false }
 });
