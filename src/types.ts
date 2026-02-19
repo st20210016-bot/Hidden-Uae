@@ -1,18 +1,13 @@
 // /src/types.ts
-export type Locale = "en" | "ar";
-export const isLocale = (v: string): v is Locale => v === "en" || v === "ar";
+export type Emirate =
+  | "Dubai"
+  | "Abu Dhabi"
+  | "Sharjah"
+  | "Ajman"
+  | "Fujairah"
+  | "Ras Al Khaimah"
+  | "Umm Al Quwain";
 
-export const EMIRATES = [
-  "Dubai",
-  "Abu Dhabi",
-  "Sharjah",
-  "Ajman",
-  "Fujairah",
-  "Ras Al Khaimah",
-  "Umm Al Quwain"
-] as const;
-
-export type Emirate = (typeof EMIRATES)[number];
 export type Budget = "free" | "low" | "mid";
 
 export type Gem = {
@@ -33,16 +28,13 @@ export type Gem = {
   tags: string[];
 };
 
-export type BadgeKey =
-  | "first_unlock"
-  | "explorer"
-  | "adventurer"
-  | "photographer"
-  | "emirate_specialist";
-
-export type Badge = {
-  key: BadgeKey;
-  titleKey: string; // i18n key
-  descKey: string;  // i18n key
-  icon: string;
+export type Submission = {
+  id: string;
+  name: string;
+  emirate: Emirate;
+  googleMapsUrl: string;
+  why: string;
+  photogenic: boolean;
+  budget: Budget;
+  createdAt: string;
 };
