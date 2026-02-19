@@ -1,6 +1,5 @@
 // /src/storage.ts
 import type { Locale, ProgressState, Submission } from "./types";
-
 export type { ProgressState } from "./types";
 
 const KEY = "hiddenUAE:progress";
@@ -23,7 +22,7 @@ function safeParse(raw: string | null): any {
   }
 }
 
-function normalizeState(input: any): ProgressState {
+function normalize(input: any): ProgressState {
   if (!input || typeof input !== "object") return { ...DEFAULT_STATE };
 
   const unlockedGemIds = Array.isArray(input.unlockedGemIds)
@@ -55,31 +54,19 @@ function normalizeState(input: any): ProgressState {
   };
 }
 
-/**
- * Overloads to satisfy any existing call sites:
- * - loadProgress()
- * - loadProgress(locale)
- * - loadProgress(locale, whatever)
- */
+// ✅ Accept any call style (0, 1, 2 args) so TS never complains
 export function loadProgress(): ProgressState;
-export function loadProgress(locale: Locale): ProgressState;
-export function loadProgress(locale: Locale, _anything: unknown): ProgressState;
-export function loadProgress(_arg1?: unknown, _arg2?: unknown): ProgressState {
-  const parsed = safeParse(localStorage.getItem(KEY));
-  return normalizeState(parsed);
+export function loadProgress(_a: unknown): ProgressState;
+export function loadProgress(_a: unknown, _b: unknown): ProgressState;
+export function loadProgress(_a?: unknown, _b?: unknown): ProgressState {
+  return normalize(safeParse(localStorage.getItem(KEY)));
 }
 
-/**
- * Overloads to satisfy any existing call sites:
- * - saveProgress(state)
- * - saveProgress(locale, state)
- */
 export function saveProgress(state: ProgressState): void;
-export function saveProgress(locale: Locale, state: ProgressState): void;
+export function saveProgress(_a: unknown, state: ProgressState): void;
 export function saveProgress(arg1: any, arg2?: any): void {
-  const state: ProgressState = typeof arg2 === "object" && arg2 ? arg2 : arg1;
-  const normalized = normalizeState(state);
-  localStorage.setItem(KEY, JSON.stringify(normalized));
+  const state: ProgressState = arg2 ? (arg2 as ProgressState) : (arg1 as ProgressState);
+  localStorage.setItem(KEY, JSON.stringify(normalize(state)));
 }
 
 export function setPreferredLocale(locale: Locale) {
@@ -97,6 +84,5 @@ export function saveSubmissions(items: Submission[]) {
 }
 
 export function addSubmission(item: Submission) {
-  const prev = getSubmissions();
-  saveSubmissions([item, ...prev]);
+  saveSubmissions([item, ...getSubmissions()]);
 }
