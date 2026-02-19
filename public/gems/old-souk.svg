@@ -1,0 +1,61 @@
+<!-- /public/gems/old-souk.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#020617"/>
+      <stop offset="0.55" stop-color="#0b1223"/>
+      <stop offset="1" stop-color="#1b0b22"/>
+    </linearGradient>
+
+    <radialGradient id="warm" cx="55%" cy="45%" r="60%">
+      <stop offset="0" stop-color="#fb923c" stop-opacity="0.26"/>
+      <stop offset="0.5" stop-color="#fb923c" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="grain" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="matrix" values="
+        0 0 0 0 0
+        0 0 0 0 0
+        0 0 0 0 0
+        0 0 0 .20 0"/>
+    </filter>
+
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="900" fill="url(#bg)"/>
+  <rect width="1400" height="900" fill="url(#warm)"/>
+
+  <!-- alley walls -->
+  <path d="M0,900 L0,230 C160,260 280,330 380,420 C420,450 470,520 520,900 Z"
+        fill="#050816" opacity="0.85"/>
+  <path d="M1400,900 L1400,240 C1240,270 1100,360 980,460 C930,505 880,580 840,900 Z"
+        fill="#050816" opacity="0.88"/>
+
+  <!-- arch + lanterns -->
+  <g filter="url(#softGlow)">
+    <path d="M470,430 C520,300 880,300 930,430 L930,540 L470,540 Z"
+          fill="#0b1223" opacity="0.7" stroke="#2dd4bf" stroke-opacity="0.18" stroke-width="3"/>
+    <g opacity="0.85">
+      <circle cx="560" cy="500" r="18" fill="#fb923c" opacity="0.85"/>
+      <circle cx="700" cy="480" r="14" fill="#2dd4bf" opacity="0.65"/>
+      <circle cx="835" cy="505" r="16" fill="#fb923c" opacity="0.75"/>
+    </g>
+  </g>
+
+  <!-- floor perspective -->
+  <path d="M520,900 L610,560 L790,560 L880,900 Z" fill="#0b1223" opacity="0.7"/>
+  <path d="M610,560 L700,900" stroke="#2dd4bf" stroke-opacity="0.12" stroke-width="10"/>
+  <path d="M790,560 L700,900" stroke="#fb923c" stroke-opacity="0.12" stroke-width="10"/>
+
+  <rect width="1400" height="900" filter="url(#grain)" opacity="0.35"/>
+  <rect width="1400" height="900" fill="#000" opacity="0.12"/>
+</svg>
